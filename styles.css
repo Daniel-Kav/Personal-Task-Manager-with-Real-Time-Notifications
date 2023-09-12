@@ -14,3 +14,9 @@
 body {
     font-family: sans-serif;
 }
+
+.menu__bar {
+    background-color: var(--color-black);
+    height: 80px;
+    width: 100%;
+}
