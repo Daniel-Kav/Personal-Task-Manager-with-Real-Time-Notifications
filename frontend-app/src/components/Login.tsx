@@ -1,15 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();  // For redirection
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate successful login. In reality, you will handle this with an API call.
-    console.log('Logging in with', email, password);
+
+    try {
+      const response = await axios.post('https://localhost:8000/api/token', {
+        username,
+        password,
+      });
+      
+      const { access, refresh } = response.data;
+
+      // save tokens in local storage
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
+
+    } catch (error) {
+      console.error('Login failed',error);
+    }
+
+    console.log('Logging in with', username, password);
 
     // Redirect to the dashboard after login
     navigate('/dashboard');
@@ -22,8 +39,8 @@ const Login: React.FC = () => {
         <div>
           <label>Email:</label>
           <input
-            type="email"
-            value={email}
+            type="text"
+            value={username}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
