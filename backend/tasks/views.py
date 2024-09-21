@@ -17,4 +17,9 @@ class TaskListCreateView(generics.ListCreateAPIView):
         serializer.save(user = self.request.user)
     
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
-    
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    permision_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Task.objects.filter(user = self.request.user)
