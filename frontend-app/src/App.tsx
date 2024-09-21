@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Darshboard';
+import Logout from './components/Logout';
 
 const App: React.FC = () => {
   return (
@@ -11,6 +12,8 @@ const App: React.FC = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/logout" element={<Logout />} />
+
       </Routes>
     </Router>
   );
