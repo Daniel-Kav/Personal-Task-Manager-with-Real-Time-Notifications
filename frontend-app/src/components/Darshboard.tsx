@@ -1,5 +1,5 @@
 import React ,{useEffect} from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +16,9 @@ const Dashboard: React.FC = () => {
     <div>
       <h1>Welcome to the Dashboard</h1>
       <p>You have successfully logged in!</p>
+      <Link to="/logout">
+        <button>Logout</button>
+      </Link>
     </div>
   );
 };
