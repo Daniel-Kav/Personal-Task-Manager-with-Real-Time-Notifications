@@ -11,7 +11,7 @@ const Login: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('https://localhost:8000/api/token', {
+      const response = await axios.post('http://localhost:8000/api/token', {
         username,
         password,
       });
@@ -21,6 +21,7 @@ const Login: React.FC = () => {
       // save tokens in local storage
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
+      navigate('/dashboard');
 
     } catch (error) {
       console.error('Login failed',error);
@@ -29,7 +30,6 @@ const Login: React.FC = () => {
     console.log('Logging in with', username, password);
 
     // Redirect to the dashboard after login
-    navigate('/dashboard');
   };
 
   return (
