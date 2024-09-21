@@ -25,6 +25,7 @@ const Login: React.FC = () => {
 
     } catch (error) {
       console.error('Login failed',error);
+      // setError('Invalid login Credentials');
     }
 
     console.log('Logging in with', username, password);
