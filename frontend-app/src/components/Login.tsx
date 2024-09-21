@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();  // For redirection
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // You will send a POST request to your Django REST API here
+    // Simulate successful login. In reality, you will handle this with an API call.
     console.log('Logging in with', email, password);
+
+    // Redirect to the dashboard after login
+    navigate('/dashboard');
   };
 
   return (
