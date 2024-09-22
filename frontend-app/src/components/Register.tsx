@@ -2,21 +2,23 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { toast, Toaster } from 'react-hot-toast';
 
 export default function Register() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
+
     try {
       const response = await axios.post('http://localhost:8000/api/register/', {
         username,
@@ -24,22 +26,30 @@ export default function Register() {
         password,
       });
 
-      if (response.status === 200) {
-        navigate('/login');
+      if (response.status === 201) {
+        toast.success('Registration successful! Redirecting to login...');
+        setTimeout(() => navigate('/login'), 2000); // Redirect after showing success message
       }
     } catch (error) {
-      console.error('Registration failed ', error);
-      setError('Registration failed. Please try again');
+      console.error('Registration failed: ', error);
+      toast.error('Registration failed. Please try again.');
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+      {/* Background overlay */}
+      <div className="absolute inset-0 bg-black opacity-50"></div>
+      
+      {/* Toaster for notifications */}
+      <Toaster position="top-right" />
+
+      {/* Form content */}
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-8 rounded-lg shadow-lg w-96"
+        className="relative bg-white p-8 rounded-lg shadow-lg w-96 z-10"
       >
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Register</h2>
         <form onSubmit={handleRegister} className="space-y-4">
@@ -102,16 +112,6 @@ export default function Register() {
             Register
           </button>
         </form>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="mt-4 text-sm text-red-600"
-          >
-            {error}
-          </motion.div>
-        )}
         <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{' '}
           <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
