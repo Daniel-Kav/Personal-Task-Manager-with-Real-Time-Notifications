@@ -11,14 +11,25 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
       const response = await axios.post('http://localhost:8000/api/token', {
         username,
         password,
       });
 
+      // Check if the login was successful
       if (response.status === 200) {
+        const { access, refresh } = response.data;
+
+        // Store tokens in localStorage or sessionStorage
+        localStorage.setItem('access_token', access);
+        localStorage.setItem('refresh_token', refresh);
+
+        // Navigate to the dashboard after successful login
         navigate('/dashboard');
+      } else {
+        setError('Login failed. Please try again');
       }
     } catch (error) {
       console.error('Login failed ', error);
