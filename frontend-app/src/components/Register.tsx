@@ -19,9 +19,11 @@ const Register: React.FC = () => {
     }
     // Send a POST request to your Django API
     try{
-      const response = await axios.post('http://localhost:8000/api/register',{
-        username, password}
-      );
+      const response = await axios.post('http://localhost:8000/api/register/', {
+        username,
+        email,
+        password,
+      });
 
       if (response.status === 200) {
         navigate('/login')
