@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import api, { getTasksApi } from './api';
+import api from './api'; // Assuming api is an Axios instance
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -32,18 +32,27 @@ const Dashboard: React.FC = () => {
   });
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  // Fetch tasks from the backend on component mount
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-      navigate('/login');
-    } else {
-      // Fetch tasks from API
-      getTasksApi('/tasks').then(fetchedTasks => setTasks(fetchedTasks));
-    }
+    const fetchTasks = async () => {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        navigate('/login');
+      } else {
+        try {
+          // Get tasks from the backend API
+          const response = await api.get('/tasks/');
+          setTasks(response.data);
+        } catch (error) {
+          console.error('Error fetching tasks:', error);
+        }
+      }
+    };
+    fetchTasks();
   }, [navigate]);
 
+  // Simulating real-time notifications
   useEffect(() => {
-    // Simulating real-time notifications
     const notificationInterval = setInterval(() => {
       const newNotification = {
         id: Date.now(),
@@ -55,14 +64,17 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(notificationInterval);
   }, []);
 
+  // Handle adding new tasks to the backend
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newTask.title.trim()) {
       try {
+        // Send POST request to create a new task
         const response = await api.post('/tasks/create/', {
           ...newTask,
           due_date: newTask.due_date.toISOString(),
         });
+        // Update the task list with the new task
         setTasks(prev => [...prev, response.data]);
         setNewTask({
           title: '',
@@ -76,13 +88,16 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Handle toggling the completed status of a task
   const handleToggleTask = async (id: number) => {
     try {
       const taskToToggle = tasks.find(task => task.id === id);
       if (taskToToggle) {
+        // Send PATCH request to update task completion
         const response = await api.patch(`/tasks/${id}/`, {
           completed: !taskToToggle.completed,
         });
+        // Update the task in the list
         setTasks(prev =>
           prev.map(task =>
             task.id === id ? { ...task, completed: response.data.completed } : task
@@ -94,9 +109,12 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Handle deleting a task from the backend
   const handleDeleteTask = async (id: number) => {
     try {
+      // Send DELETE request to remove the task
       await api.delete(`/tasks/${id}/`);
+      // Remove the task from the state
       setTasks(prev => prev.filter(task => task.id !== id));
     } catch (error) {
       console.error('Error deleting task:', error);
