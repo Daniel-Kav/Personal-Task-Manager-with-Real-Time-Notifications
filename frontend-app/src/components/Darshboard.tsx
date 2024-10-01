@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import api, { getTasksApi } from './api';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 interface Task {
   id: number;
   title: string;
+  description: string;
+  due_date: Date;
+  priority: 'low' | 'medium' | 'high';
   completed: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Notification {
@@ -16,7 +24,12 @@ interface Notification {
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTask, setNewTask] = useState('');
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    due_date: new Date(),
+    priority: 'medium' as 'low' | 'medium' | 'high',
+  });
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
@@ -24,12 +37,8 @@ const Dashboard: React.FC = () => {
     if (!token) {
       navigate('/login');
     } else {
-      // Simulating fetching tasks from an API
-      setTasks([
-        { id: 1, title: 'Complete project proposal', completed: false },
-        { id: 2, title: 'Review code changes', completed: true },
-        { id: 3, title: 'Update documentation', completed: false },
-      ]);
+      // Fetch tasks from API
+      getTasksApi('/tasks').then(fetchedTasks => setTasks(fetchedTasks));
     }
   }, [navigate]);
 
@@ -46,29 +55,52 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(notificationInterval);
   }, []);
 
-  const handleAddTask = (e: React.FormEvent) => {
+  const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newTask.trim()) {
-      const newTaskItem: Task = {
-        id: Date.now(),
-        title: newTask.trim(),
-        completed: false,
-      };
-      setTasks(prev => [...prev, newTaskItem]);
-      setNewTask('');
+    if (newTask.title.trim()) {
+      try {
+        const response = await api.post('/tasks/create/', {
+          ...newTask,
+          due_date: newTask.due_date.toISOString(),
+        });
+        setTasks(prev => [...prev, response.data]);
+        setNewTask({
+          title: '',
+          description: '',
+          due_date: new Date(),
+          priority: 'medium',
+        });
+      } catch (error) {
+        console.error('Error adding task:', error);
+      }
     }
   };
 
-  const handleToggleTask = (id: number) => {
-    setTasks(prev =>
-      prev.map(task =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
+  const handleToggleTask = async (id: number) => {
+    try {
+      const taskToToggle = tasks.find(task => task.id === id);
+      if (taskToToggle) {
+        const response = await api.patch(`/tasks/${id}/`, {
+          completed: !taskToToggle.completed,
+        });
+        setTasks(prev =>
+          prev.map(task =>
+            task.id === id ? { ...task, completed: response.data.completed } : task
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling task:', error);
+    }
   };
 
-  const handleDeleteTask = (id: number) => {
-    setTasks(prev => prev.filter(task => task.id !== id));
+  const handleDeleteTask = async (id: number) => {
+    try {
+      await api.delete(`/tasks/${id}/`);
+      setTasks(prev => prev.filter(task => task.id !== id));
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
   };
 
   return (
@@ -83,17 +115,37 @@ const Dashboard: React.FC = () => {
             <div className="divide-y divide-gray-200">
               <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
                 <div className="flex flex-col space-y-4">
-                  <form onSubmit={handleAddTask} className="flex space-x-2">
+                  <form onSubmit={handleAddTask} className="space-y-4">
                     <input
                       type="text"
-                      value={newTask}
-                      onChange={(e) => setNewTask(e.target.value)}
-                      placeholder="Add a new task"
-                      className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                      value={newTask.title}
+                      onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                      placeholder="Task title"
+                      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     />
+                    <textarea
+                      value={newTask.description}
+                      onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                      placeholder="Task description"
+                      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                    <DatePicker
+                      selected={newTask.due_date}
+                      onChange={(date: Date) => setNewTask({...newTask, due_date: date})}
+                      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                    <select
+                      value={newTask.priority}
+                      onChange={(e) => setNewTask({...newTask, priority: e.target.value as 'low' | 'medium' | 'high'})}
+                      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
                     <button
                       type="submit"
-                      className="px-4 py-2 text-white bg-cyan-500 rounded-md hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+                      className="w-full px-4 py-2 text-white bg-cyan-500 rounded-md hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
                     >
                       Add Task
                     </button>
@@ -114,9 +166,14 @@ const Dashboard: React.FC = () => {
                             onChange={() => handleToggleTask(task.id)}
                             className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300 rounded"
                           />
-                          <span className={task.completed ? 'line-through text-gray-500' : ''}>
-                            {task.title}
-                          </span>
+                          <div className={task.completed ? 'line-through text-gray-500' : ''}>
+                            <h3 className="font-semibold">{task.title}</h3>
+                            <p className="text-sm">{task.description}</p>
+                            <p className="text-xs text-gray-500">
+                              Due: {new Date(task.due_date).toLocaleDateString()} | 
+                              Priority: {task.priority}
+                            </p>
+                          </div>
                         </div>
                         <button
                           onClick={() => handleDeleteTask(task.id)}

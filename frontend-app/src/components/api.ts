@@ -49,4 +49,17 @@ api.interceptors.response.use(
   }
 );
 
+
+export const getTasksApi = axios.create({
+  baseURL: 'http://localhost:8000/api/',
+});
+
+// Add the token to the request header
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 export default api;
